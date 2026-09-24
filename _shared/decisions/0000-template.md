@@ -4,19 +4,11 @@ status: proposed        # proposed | accepted | rejected | superseded by ADR-NNN
 date: YYYY-MM-DD
 deciders: [ ]
 affects: [ ]            # Story key, REQ ID
+supersedes:             # ADR-NNNN nếu có
 ---
-# [Tiêu đề: quyết định gì]
+# ADR-0000 — [quyết định gì]
 
-## Bối cảnh, vấn đề
-[2–3 câu, có thể dạng câu hỏi]
-
-## Phương án đã xét
-- [A]
-- [B]
-
-## Quyết định
-Chọn [A] vì [lý do].
-
-### Hệ quả
-- Tốt: [ ]
-- Xấu: [ ]
+- Bối cảnh: [2–3 câu: vấn đề, ràng buộc]
+- Quyết định: [chọn gì, vì sao]
+- Hệ quả: [tốt · xấu · việc phải làm]
+- Phương án đã xét (tùy chọn): [A] · [B]

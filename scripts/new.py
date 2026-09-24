@@ -48,13 +48,15 @@ def story_dir_and_key(path):
     return d, m.group(1)
 
 
-def brd_files(d, n, vals):
-    for part in ("requirements", "design", "test"):
+def brd_files(d, n, vals, parts):
+    for part in parts:
         write(TPL / "story" / part / "BRD.md", d / part / f"B{n}-{vals['BRD_SLUG']}.md", vals)
 
 
 def add_changelog(d, line):
     f = d / "CHANGELOG.md"
+    if not f.is_file():
+        return
     lines = f.read_text(encoding="utf-8").splitlines()
     head = f"## {TODAY}"
     idx = next((i for i, l in enumerate(lines) if l.startswith("## ")), None)
@@ -95,9 +97,11 @@ def cmd_story(a):
         die(f"đã tồn tại: {d.relative_to(ROOT)}")
     vals = {"KEY": a.key, "TITLE": a.title, "OWNER": a.owner, "DATE": TODAY,
             "BRD": "B1", "BRD_SLUG": brd_slug, "BRD_TITLE": a.brd_title or a.title}
-    for f in ("README.md", "decisions.md", "CHANGELOG.md"):
+    # E1: bắt buộc README, decisions, requirements, test. CHANGELOG, design tùy chọn (--full)
+    files = ["README.md", "decisions.md"] + (["CHANGELOG.md"] if a.full else [])
+    for f in files:
         write(TPL / "story" / f, d / f, vals)
-    brd_files(d, 1, vals)
+    brd_files(d, 1, vals, ["requirements", "test"] + (["design"] if a.full else []))
     (d / "handoffs").mkdir()
     (d / "handoffs" / ".gitkeep").touch()
     print(f"+ {(d / 'handoffs').relative_to(ROOT)}/")
@@ -111,10 +115,10 @@ def cmd_brd(a):
     n = max(nums, default=0) + 1
     vals = {"KEY": key, "OWNER": a.owner, "DATE": TODAY,
             "BRD": f"B{n}", "BRD_SLUG": a.slug, "BRD_TITLE": a.title}
-    brd_files(d, n, vals)
+    brd_files(d, n, vals, ["requirements", "test"] + (["design"] if a.full else []))
     add_brd_row(d, f"| [{key}-B{n}](requirements/B{n}-{a.slug}.md) | {a.title} | [ ] | {a.owner} | draft |")
     add_changelog(d, f"- Added {key}-B{n}: tạo BRD \"{a.title}\".")
-    print(f"~ README.md, CHANGELOG.md cập nhật")
+    print("~ README.md cập nhật")
 
 
 def cmd_handoff(a):
@@ -136,6 +140,7 @@ def main():
     s.add_argument("--owner", default="[?]")
     s.add_argument("--brd-slug", help="slug BRD đầu tiên (mặc định = slug Story)")
     s.add_argument("--brd-title", help="tên BRD đầu tiên (mặc định = title)")
+    s.add_argument("--full", action="store_true", help="tạo cả CHANGELOG.md, design/ (ngoài bộ tối giản E1)")
     s.set_defaults(func=cmd_story)
 
     b = sub.add_parser("brd", help="thêm BRD vào Story")
@@ -143,6 +148,7 @@ def main():
     b.add_argument("slug")
     b.add_argument("title")
     b.add_argument("--owner", default="[?]")
+    b.add_argument("--full", action="store_true", help="tạo cả design/")
     b.set_defaults(func=cmd_brd)
 
     h = sub.add_parser("handoff", help="tạo file bàn giao")

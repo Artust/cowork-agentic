@@ -1,7 +1,7 @@
 # Constraints register
 
 Ràng buộc kỹ thuật, pháp lý, hạ tầng áp cho nhiều Story. V3 đối chiếu BRD với file này.
-Mỗi ràng buộc 1 dòng. Hết hiệu lực → đổi trạng thái, không xóa.
+Mỗi ràng buộc 1 dòng. Hết hiệu lực → đổi trạng thái, không xóa. Phát hiện lúc fix bug hay spike → thêm dòng ngay.
 
 | ID | Ràng buộc | Loại | Nguồn | Áp cho | Owner | Xác minh | Trạng thái |
 |---|---|---|---|---|---|---|---|

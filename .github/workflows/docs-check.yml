@@ -1,4 +1,5 @@
 name: docs-check
+# E1: chế độ mặc định (chỉ chặn lỗi nặng). Sau 2 Story: thêm --strict vào 2 lệnh dưới.
 on:
   pull_request:
   push:

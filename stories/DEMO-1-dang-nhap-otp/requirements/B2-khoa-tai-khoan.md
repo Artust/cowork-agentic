@@ -1,7 +1,7 @@
 ---
 id: DEMO-1-B2
 title: Khóa tài khoản khi nhập sai
-status: approved     # draft | review | approved
+status: approved     # draft | approved
 owner: BA-An
 tasks: [DEMO-13]
 updated: 2026-09-22

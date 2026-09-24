@@ -1,7 +1,11 @@
 # Skills
 
 Chuẩn: [agentskills.io](https://agentskills.io). 1 skill = 1 folder chứa `SKILL.md` (+ `references/`, `scripts/`, `assets/` nếu cần).
-Người chọn lọc, AI chỉ viết nháp: skill AI tự sinh chưa qua kiểm tra thường làm kết quả kém đi (SkillsBench, 2026).
+Người chọn lọc, AI chỉ viết nháp (prompt V4): skill chọn lọc +16.2 điểm, skill AI tự sinh không lợi trung bình; mảng Software Engineering chỉ +4.5; 16/84 task kém đi khi có skill (SkillsBench, arXiv 2602.12670). Skill gọn 2–3 module tốt hơn tài liệu dài.
+
+## Cách nạp skill vào Claude
+Repo chỉ giữ bản gốc. Skill có hiệu lực khi được nạp vào công cụ: `[Claude.ai Skills / Claude Code / khác — chưa chốt]`.
+Chưa chốt → coi như skill chưa dùng được; V4 chưa chạy. Owner: `[?]`.
 
 ## Tạo skill
 1. Cho AI làm việc thật KHÔNG có skill. Ghi chỗ sai, thiếu context.

@@ -7,6 +7,8 @@ updated: {{DATE}}
 ---
 # Design — {{KEY}}-{{BRD}}
 
+Tùy chọn trong E1. Designer chỉ điền frontmatter + bảng frame; phần Tech detail là của Dev.
+
 ## Màn hình / luồng
 | REQ | Frame Figma | Ghi chú |
 |---|---|---|

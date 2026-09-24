@@ -1,3 +1,4 @@
+# E1: chế độ mặc định. Sau 2 Story: thêm --strict.
 docs-check:
   image: python:3.12
   variables:

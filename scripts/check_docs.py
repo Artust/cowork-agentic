@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
 """Kiểm tra quy ước tài liệu trong stories/. Exit 1 nếu có lỗi.
 
---base <ref>: kiểm tra thêm thay đổi so với <ref> (dùng trong CI cho PR).
+Mặc định (E1) chỉ chặn: trùng ID, còn placeholder {{…}}, sai tên folder Story,
+sửa Story đã đóng băng. Vi phạm khác → cảnh báo.
+--strict: mọi vi phạm quy ước là lỗi (dùng sau 2 Story).
+--base <ref>: kiểm tra thêm thay đổi so với <ref> (CI cho PR).
 """
 import argparse
 import re
@@ -12,9 +15,10 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 STORIES = ROOT / "stories"
 STATUSES = ["draft", "review", "ready", "in-dev", "uat", "done", "cancelled"]
-BRD_STATUSES = ["draft", "review", "approved"]
+BRD_STATUSES = ["draft", "approved"]
 FROZEN = {"done", "cancelled"}
 FULL_COVERAGE = {"uat", "done"}
+FROZEN_EDITABLE = {"README.md"}  # frontmatter, link
 
 ID = r"[A-Z][A-Z0-9]+-\d+"
 FOLDER_RE = re.compile(rf"^({ID})-[a-z0-9]+(?:-[a-z0-9]+)*$")
@@ -26,6 +30,7 @@ TC_HEAD = re.compile(rf"^#{{2,4}}\s+({ID}-B\d+-TC\d+)\b")
 COVERS = re.compile(r"^\s*[-*]?\s*covers:\s*(.+)$", re.I)
 ANY_REF = re.compile(rf"\b{ID}-B\d+-R\d+(?:-AC\d+)?\b")
 
+STRICT = False
 errors, warnings = [], []
 
 
@@ -36,11 +41,18 @@ def rel(p):
         return str(p)
 
 
-def err(p, msg):
+def hard(p, msg):
+    """Luôn chặn."""
     errors.append(f"{rel(p)}: {msg}")
 
 
+def soft(p, msg):
+    """Chặn khi --strict, còn lại cảnh báo."""
+    (errors if STRICT else warnings).append(f"{rel(p)}: {msg}")
+
+
 def warn(p, msg):
+    """Chỉ cảnh báo."""
     warnings.append(f"{rel(p)}: {msg}")
 
 
@@ -69,18 +81,18 @@ def md_files(folder):
 def check_brd_file(f, key, seen_brd, all_reqs, acs):
     m = BRD_FILE_RE.match(f.name)
     if not m:
-        err(f, "tên file phải là B<n>-<slug>.md")
-        return None
+        soft(f, "tên file phải là B<n>-<slug>.md")
+        return
     n = m.group(1)
     if n in seen_brd:
-        err(f, f"trùng số B{n} với {rel(seen_brd[n])}")
+        hard(f, f"trùng số B{n} với {rel(seen_brd[n])}")
     seen_brd[n] = f
     text = read(f)
     fm = frontmatter(text)
     if fm.get("id") != f"{key}-B{n}":
-        err(f, f"frontmatter id phải là {key}-B{n}")
+        soft(f, f"frontmatter id phải là {key}-B{n}")
     if fm.get("status") not in BRD_STATUSES:
-        err(f, f"status '{fm.get('status')}' không hợp lệ: {' | '.join(BRD_STATUSES)}")
+        soft(f, f"status '{fm.get('status')}' không hợp lệ: {' | '.join(BRD_STATUSES)}")
 
     prefix = f"{key}-B{n}-R"
     reqs, cur = {}, None
@@ -88,26 +100,25 @@ def check_brd_file(f, key, seen_brd, all_reqs, acs):
         if rm := REQ_HEAD.match(line):
             cur = rm.group(1)
             if not cur.startswith(prefix):
-                err(f, f"dòng {i}: {cur} phải bắt đầu bằng {prefix}")
+                soft(f, f"dòng {i}: {cur} phải bắt đầu bằng {prefix}")
             if cur in all_reqs:
-                err(f, f"dòng {i}: {cur} trùng với {rel(all_reqs[cur])}")
+                hard(f, f"dòng {i}: {cur} trùng với {rel(all_reqs[cur])}")
             all_reqs[cur] = f
             reqs[cur] = 0
         elif am := AC_DEF.match(line):
             ac = am.group(1)
             if cur is None or not ac.startswith(cur + "-AC"):
-                err(f, f"dòng {i}: {ac} phải nằm dưới yêu cầu {ac.rsplit('-AC', 1)[0]}")
+                soft(f, f"dòng {i}: {ac} phải nằm dưới yêu cầu {ac.rsplit('-AC', 1)[0]}")
                 continue
             if ac in acs:
-                err(f, f"dòng {i}: {ac} trùng")
+                hard(f, f"dòng {i}: {ac} trùng")
             acs[ac] = f
             reqs[cur] += 1
     for r, count in reqs.items():
         if count == 0:
-            err(f, f"{r} chưa có acceptance criteria (**{r}-AC1**: …)")
+            soft(f, f"{r} chưa có acceptance criteria (**{r}-AC1**: …)")
     if not reqs:
         warn(f, "chưa có yêu cầu nào")
-    return n
 
 
 def check_tests(d, key, acs):
@@ -115,7 +126,7 @@ def check_tests(d, key, acs):
     for f in md_files(d / "test"):
         m = BRD_FILE_RE.match(f.name)
         if not m:
-            err(f, "tên file phải là B<n>-<slug>.md")
+            soft(f, "tên file phải là B<n>-<slug>.md")
             continue
         prefix = f"{key}-B{m.group(1)}-TC"
         seen = set()
@@ -123,16 +134,16 @@ def check_tests(d, key, acs):
             if tm := TC_HEAD.match(line):
                 tc = tm.group(1)
                 if not tc.startswith(prefix):
-                    err(f, f"dòng {i}: {tc} phải bắt đầu bằng {prefix}")
+                    soft(f, f"dòng {i}: {tc} phải bắt đầu bằng {prefix}")
                 if tc in seen:
-                    err(f, f"dòng {i}: {tc} trùng")
+                    hard(f, f"dòng {i}: {tc} trùng")
                 seen.add(tc)
             elif cm := COVERS.match(line):
                 for ref in re.split(r"[,\s]+", cm.group(1).strip()):
                     if not ref:
                         continue
                     if ref not in acs:
-                        err(f, f"dòng {i}: covers {ref} không tồn tại")
+                        soft(f, f"dòng {i}: covers {ref} không tồn tại")
                     covered.add(ref)
     return covered
 
@@ -140,30 +151,30 @@ def check_tests(d, key, acs):
 def check_story(d, all_reqs):
     m = FOLDER_RE.match(d.name)
     if not m:
-        err(d, "tên folder phải là <KEY>-<slug> (key tracker + chữ thường không dấu, gạch ngang)")
+        hard(d, "tên folder phải là <KEY>-<slug> (key tracker + chữ thường không dấu, gạch ngang)")
         return
     key = m.group(1)
 
-    for name in ("README.md", "CHANGELOG.md", "decisions.md"):
+    for name in ("README.md", "decisions.md"):
         if not (d / name).is_file():
-            err(d, f"thiếu {name}")
+            soft(d, f"thiếu {name} (bắt buộc E1)")
     brd_files = md_files(d / "requirements")
     if not brd_files:
-        err(d, "requirements/ cần ít nhất 1 file B<n>-<slug>.md")
+        soft(d, "requirements/ cần ít nhất 1 file B<n>-<slug>.md (bắt buộc E1)")
 
     for f in d.rglob("*.md"):
         if "{{" in read(f):
-            err(f, "còn placeholder {{…}}")
+            hard(f, "còn placeholder {{…}}")
 
     status = None
     readme = d / "README.md"
     if readme.is_file():
         fm = frontmatter(read(readme))
         if fm.get("key") != key:
-            err(readme, f"frontmatter key phải là {key}")
+            soft(readme, f"frontmatter key phải là {key}")
         status = fm.get("status")
         if status not in STATUSES:
-            err(readme, f"status '{status}' không hợp lệ: {' | '.join(STATUSES)}")
+            soft(readme, f"status '{status}' không hợp lệ: {' | '.join(STATUSES)}")
         owner = fm.get("owner", "")
         if not owner or owner.startswith("["):
             warn(readme, "chưa có owner")
@@ -176,14 +187,14 @@ def check_story(d, all_reqs):
         for f in md_files(d / part):
             bm = BRD_FILE_RE.match(f.name)
             if bm and bm.group(1) not in seen_brd:
-                err(f, f"không có BRD B{bm.group(1)} tương ứng trong requirements/")
+                soft(f, f"không có BRD B{bm.group(1)} tương ứng trong requirements/")
 
     covered = check_tests(d, key, acs)
     missing = sorted(set(acs) - covered)
     if missing:
         msg = f"{len(missing)} AC chưa có testcase: {', '.join(missing)}"
         if status in FULL_COVERAGE:
-            err(d, msg + f" (bắt buộc từ status {'/'.join(sorted(FULL_COVERAGE))})")
+            soft(d, msg + f" (bắt buộc từ status {'/'.join(sorted(FULL_COVERAGE))})")
         elif status == "in-dev":
             warn(d, msg)
 
@@ -194,7 +205,7 @@ def check_story(d, all_reqs):
 
     for f in (d / "handoffs").glob("*") if (d / "handoffs").is_dir() else []:
         if f.name != ".gitkeep" and not HANDOFF_RE.match(f.name):
-            err(f, "tên file phải là YYYY-MM-DD-<từ>-to-<đến>.md")
+            soft(f, "tên file phải là YYYY-MM-DD-<từ>-to-<đến>.md")
 
 
 def git(*args):
@@ -215,19 +226,32 @@ def check_diff(base):
             by_story.setdefault(parts[1], set()).add("/".join(parts[2:]))
     for story, files in sorted(by_story.items()):
         d = STORIES / story
-        if any(f.startswith("requirements/") for f in files) and "CHANGELOG.md" not in files:
-            err(d, "sửa requirements/ nhưng chưa ghi CHANGELOG.md")
-        old = git("show", f"{mb}:stories/{story}/README.md")
-        if old.returncode == 0 and frontmatter(old.stdout).get("status") in FROZEN:
-            err(d, "Story đã done/cancelled, không sửa. Tạo Story mới, link về Story này")
+        old_readme = git("show", f"{mb}:stories/{story}/README.md")
+        if old_readme.returncode == 0 and frontmatter(old_readme.stdout).get("status") in FROZEN:
+            other = sorted(files - FROZEN_EDITABLE)
+            if other:
+                hard(d, f"Story đã done/cancelled, chỉ sửa được README.md. Đã sửa: {', '.join(other)}. "
+                        "Tạo Story mới, link về Story này")
+        # Đổi BRD đã approved → phải có CHANGELOG
+        approved_changed = []
+        for f in files:
+            if f.startswith("requirements/") and f.endswith(".md"):
+                old = git("show", f"{mb}:stories/{story}/{f}")
+                if old.returncode == 0 and frontmatter(old.stdout).get("status") == "approved":
+                    approved_changed.append(f)
+        if approved_changed and "CHANGELOG.md" not in files:
+            soft(d, f"sửa BRD đã approved ({', '.join(approved_changed)}) nhưng chưa ghi CHANGELOG.md")
 
 
 def main():
+    global STRICT
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8")
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("--base", help="ref để so sánh, vd origin/main")
+    p.add_argument("--strict", action="store_true", help="mọi vi phạm là lỗi")
     a = p.parse_args()
+    STRICT = a.strict
 
     all_reqs = {}
     stories = [d for d in sorted(STORIES.iterdir()) if d.is_dir() and not d.name.startswith(".")] if STORIES.is_dir() else []
@@ -240,7 +264,8 @@ def main():
         print(f"CẢNH BÁO  {w}")
     for e in errors:
         print(f"LỖI       {e}")
-    print(f"\n{len(stories)} Story · {len(all_reqs)} REQ · {len(errors)} lỗi · {len(warnings)} cảnh báo")
+    mode = "strict" if STRICT else "E1"
+    print(f"\n[{mode}] {len(stories)} Story · {len(all_reqs)} REQ · {len(errors)} lỗi · {len(warnings)} cảnh báo")
     sys.exit(1 if errors else 0)
 
 

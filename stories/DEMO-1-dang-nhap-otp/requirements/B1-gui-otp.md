@@ -1,7 +1,7 @@
 ---
 id: DEMO-1-B1
 title: Gửi OTP
-status: approved     # draft | review | approved
+status: approved     # draft | approved
 owner: BA-An
 tasks: [DEMO-11, DEMO-12]
 updated: 2026-09-22

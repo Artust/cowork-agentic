@@ -6,7 +6,7 @@ owner: BA-An
 epic: DEMO-EPIC-1
 tracker: [link]
 code_prs: []         # link PR repo code
-updated: 2026-09-23
+updated: 2026-09-24
 ---
 # DEMO-1 — Đăng nhập bằng OTP
 

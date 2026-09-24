@@ -8,25 +8,19 @@ date: {{DATE}}
 # Bàn giao {{FROM}} → {{TO}} — {{KEY}}
 
 Điền theo prompt V1 (`process/03-prompts.md`). Link, không chép.
+E1: bắt buộc ở 2 mốc — ba → dev (BRD → Design/Dev), dev → tester (Dev → UAT).
 
-## Mục tiêu
-[2 dòng]
-
-## Phạm vi
-- Có:
-- Không:
+## Mục tiêu, phạm vi
+- Mục tiêu (2 dòng):
+- Có / không:
 
 ## REQ + AC liên quan
-- 
+- (link `requirements/B….md#…`)
 
-## Quyết định đã chốt
-- (link `decisions.md#…`)
-
-## Ràng buộc kỹ thuật
-- (link `_shared/constraints.md#…`)
-
-## Thay đổi so với bản trước
-- (link `CHANGELOG.md`)
+## Mới từ lần bàn giao trước
+- Quyết định: (link `decisions.md#…`)
+- Đổi REQ/AC: (link `CHANGELOG.md`)
+- Ràng buộc: (link `_shared/constraints.md#…`)
 
 ## Câu hỏi mở + người trả lời
 - 
@@ -34,9 +28,6 @@ date: {{DATE}}
 ## Rủi ro
 - 
 
-## 5 câu hỏi kiểm tra cho người nhận
-1. 
-2. 
-3. 
-4. 
-5. 
+## Người nhận xác nhận
+- Đã đọc: [tên, ngày]
+- 1 điều chưa rõ sau khi đọc: [ ] → người gửi bổ sung gói

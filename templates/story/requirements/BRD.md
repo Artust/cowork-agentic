@@ -1,7 +1,7 @@
 ---
 id: {{KEY}}-{{BRD}}
 title: {{BRD_TITLE}}
-status: draft        # draft | review | approved
+status: draft        # draft | approved
 owner: {{OWNER}}
 tasks: []            # task tracker thuộc BRD này
 updated: {{DATE}}

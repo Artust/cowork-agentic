@@ -70,46 +70,45 @@ Input: giả thuyết ban đầu, số đo trước/sau, ghi chú của BA, Dev,
 # B. Vận hành — thử ngay trên 1 Story
 
 ## V1 — Handoff packet (chạy khi chuyển bước) → P1
+E1: bắt buộc ở 2 mốc — ba → dev (BRD → Design/Dev) và dev → tester (Dev → UAT). Mốc khác: tùy chọn.
 
 ```
-Input: folder stories/[KEY-slug] (README, requirements, design, decisions, CHANGELOG).
+Input: folder stories/[KEY-slug] (README, requirements, decisions, test, design, CHANGELOG nếu có).
 Tạo file bàn giao bước [N] → [N+1] theo templates/handoff.md.
-Lưu: handoffs/[YYYY-MM-DD]-[từ]-to-[đến].md. Người nhận: [vai trò].
+Lưu: stories/[KEY-slug]/handoffs/[YYYY-MM-DD]-[từ]-to-[đến].md. Người nhận: [vai trò].
 
-- Mục tiêu, 2 dòng
-- Phạm vi: có / không
+- Mục tiêu 2 dòng · phạm vi có/không
 - REQ ID + AC liên quan: link, không chép
-- Quyết định đã chốt: link <KEY>-Dxx
-- Ràng buộc kỹ thuật: link C-xxx
-- Thay đổi so với lần bàn giao trước: link dòng CHANGELOG
+- Mới từ lần bàn giao trước: quyết định (link <KEY>-Dxx) · đổi REQ/AC (link dòng CHANGELOG) · ràng buộc (link C-xxx)
 - Câu hỏi mở + người trả lời
 - Rủi ro
 
 Sau đó:
 1. Liệt kê thông tin có trong input nhưng chưa vào gói. Hỏi người gửi: thêm hay bỏ.
-2. Viết 5 câu hỏi kiểm tra cho người nhận. Trả lời sai → context chưa đủ, bổ sung gói.
+2. Người nhận đọc, ghi 1 điều chưa rõ vào mục cuối. Có → người gửi bổ sung gói.
 ```
 
-## V2 — Chốt phiên (chạy cuối mỗi chat làm việc) → P3
+## V2 — Chốt phiên → P3
+E1: chỉ chạy khi phiên chat có quyết định hoặc đổi REQ/AC. Không có → không làm gì.
 
 ```
-Từ chat này, xuất 3 khối dán thẳng vào repo. Không có gì mới → "không thay đổi".
+Từ chat này, xuất các khối dán thẳng vào repo. Không có gì mới → "không thay đổi".
 
 1. decisions.md — mỗi quyết định:
-## <KEY>-Dxx — [tiêu đề]
+## <KEY>-Dxx — [quyết định gì]
 - Trạng thái: proposed | accepted | superseded by <KEY>-Dyy
 - Ngày · Người chốt
 - Supersedes: [nếu có]
 - Ảnh hưởng: REQ ID, file design
-- Bối cảnh · Phương án đã xét · Quyết định + lý do · Hệ quả
+- Bối cảnh · Quyết định + lý do · Hệ quả · Phương án đã xét (tùy chọn)
 
-2. CHANGELOG.md — mỗi thay đổi 1 dòng:
+2. CHANGELOG.md — chỉ khi đổi REQ/AC sau approved, mỗi thay đổi 1 dòng:
 - <Added|Changed|Removed> <ID>: <nội dung>. Lý do: <KEY-Dxx>. Người chốt: <tên>. PR: #
 
 3. README Story — câu hỏi mở mới (câu hỏi · người trả lời · hạn), việc đang chờ.
 
 Thêm 1 dòng cho PR: Output AI trong phiên: dùng nguyên / sửa nhẹ / viết lại — lý do.
-Quyết định ảnh hưởng ≥ 2 Story → đề xuất ADR trong _shared/decisions/.
+Quyết định ảnh hưởng ≥ 2 Story → đề xuất ADR trong _shared/decisions/ (cùng format).
 ```
 
 ## V3 — Kiểm tra khả thi trước khi chốt BRD → P2
