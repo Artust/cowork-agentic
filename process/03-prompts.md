@@ -1,6 +1,7 @@
 # Prompt library
 Thay phần `[ ]` trước khi chạy.
-Vòng lặp: P1 nghiên cứu → P2 đọc sâu → thử trên 1 feature → P3 rút kinh nghiệm → ghi `04-learning-log.md`.
+Vòng lặp: P1 nghiên cứu → P2 đọc sâu → thử trên 1 Story → P3 rút kinh nghiệm → ghi `04-learning-log.md` (qua PR).
+Quy ước ID, đường dẫn: `README.md` repo tài liệu. REQ `<KEY>-B<n>-R<nn>` · AC `<REQ>-AC<n>` · quyết định `<KEY>-D<nn>` · ràng buộc `C-<nnn>`.
 
 ---
 
@@ -66,20 +67,21 @@ Input: giả thuyết ban đầu, số đo trước/sau, ghi chú của BA, Dev,
 
 ---
 
-# B. Vận hành — thử ngay trên 1 feature
+# B. Vận hành — thử ngay trên 1 Story
 
 ## V1 — Handoff packet (chạy khi chuyển bước) → P1
 
 ```
-Input: tài liệu hiện hành của bước [N] + decision log.
-Tạo gói bàn giao cho bước [N+1]. Người nhận: [vai trò].
+Input: folder stories/[KEY-slug] (README, requirements, design, decisions, CHANGELOG).
+Tạo file bàn giao bước [N] → [N+1] theo templates/handoff.md.
+Lưu: handoffs/[YYYY-MM-DD]-[từ]-to-[đến].md. Người nhận: [vai trò].
 
-- Mục tiêu feature, 2 dòng
+- Mục tiêu, 2 dòng
 - Phạm vi: có / không
-- Yêu cầu theo REQ ID + acceptance criteria
-- Quyết định đã chốt + lý do, ngày, người chốt
-- Ràng buộc kỹ thuật
-- Thay đổi so với bản trước
+- REQ ID + AC liên quan: link, không chép
+- Quyết định đã chốt: link <KEY>-Dxx
+- Ràng buộc kỹ thuật: link C-xxx
+- Thay đổi so với lần bàn giao trước: link dòng CHANGELOG
 - Câu hỏi mở + người trả lời
 - Rủi ro
 
@@ -91,27 +93,52 @@ Sau đó:
 ## V2 — Chốt phiên (chạy cuối mỗi chat làm việc) → P3
 
 ```
-Từ chat này, xuất:
-- Quyết định mới: nội dung · lý do · người chốt · REQ, design bị ảnh hưởng
-- Thay đổi cần ghi vào BRD / design / testcase: vị trí + nội dung mới
-- Câu hỏi mở + người phụ trách
-- Thứ bị thay thế, hủy
+Từ chat này, xuất 3 khối dán thẳng vào repo. Không có gì mới → "không thay đổi".
 
-Định dạng dán thẳng vào decision log và change log.
-Không có gì mới → ghi "không thay đổi".
+1. decisions.md — mỗi quyết định:
+## <KEY>-Dxx — [tiêu đề]
+- Trạng thái: proposed | accepted | superseded by <KEY>-Dyy
+- Ngày · Người chốt
+- Supersedes: [nếu có]
+- Ảnh hưởng: REQ ID, file design
+- Bối cảnh · Phương án đã xét · Quyết định + lý do · Hệ quả
+
+2. CHANGELOG.md — mỗi thay đổi 1 dòng:
+- <Added|Changed|Removed> <ID>: <nội dung>. Lý do: <KEY-Dxx>. Người chốt: <tên>. PR: #
+
+3. README Story — câu hỏi mở mới (câu hỏi · người trả lời · hạn), việc đang chờ.
+
+Thêm 1 dòng cho PR: Output AI trong phiên: dùng nguyên / sửa nhẹ / viết lại — lý do.
+Quyết định ảnh hưởng ≥ 2 Story → đề xuất ADR trong _shared/decisions/.
 ```
 
 ## V3 — Kiểm tra khả thi trước khi chốt BRD → P2
 
 ```
-Input: BRD nháp + constraints register + [mô tả kiến trúc hoặc codebase].
+Input: requirements/B[n]-….md + _shared/constraints.md + _shared/architecture.md + [codebase, nếu chính sách dữ liệu cho phép].
 
-Với mỗi REQ:
+Với mỗi REQ ID:
 - Khả thi: có / có điều kiện / không / chưa rõ
-- Ràng buộc chạm phải (trích constraints register hoặc code)
+- Ràng buộc chạm phải: C-xxx hoặc đường dẫn code
 - Phương án thay thế + đánh đổi
 - Cần spike? Câu hỏi spike phải trả lời, timebox
 
-Xuất: bảng theo REQ ID + danh sách REQ rủi ro cao cần Dev xác nhận trước khi ký BRD.
+Xuất:
+1. Bảng theo REQ ID.
+2. REQ rủi ro cao cần Dev xác nhận trước khi chuyển BRD sang approved.
+3. Ràng buộc mới phát hiện → dòng đề xuất cho _shared/constraints.md.
 Không chắc → ghi "chưa rõ", không đoán.
+```
+
+## V4 — Nháp skill từ phiên làm việc → H7
+
+```
+Input: chat này + bản cuối đã được người sửa + skills/README.md.
+Chỉ chạy khi cùng một kiểu lỗi/sửa lặp ≥ 2 lần.
+
+1. Liệt kê chỗ AI sai hoặc thiếu context trong phiên, kèm cách người đã sửa.
+2. Bỏ những gì AI đã tự biết. Giữ quy ước riêng của team.
+3. Nháp skills/[ten-skill]/SKILL.md: name, description (khi nào dùng), metadata (owner, version 0.1, status: draft, review-by, evidence: trống), thân < 500 dòng, mỗi quy tắc kèm lý do.
+4. Viết 3 tình huống kiểm tra + kết quả mong đợi, để chạy có/không skill.
+Không tự đánh dấu skill là đã kiểm chứng.
 ```
