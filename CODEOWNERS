@@ -1,0 +1,13 @@
+# Thay @ORG/... bằng team/người thật. Dòng sau thắng dòng trước.
+*                          @ORG/tech-lead
+/_shared/                  @ORG/tech-lead @ORG/ba
+/_shared/constraints.md    @ORG/dev
+/_shared/architecture.md   @ORG/dev
+/stories/*/README.md       @ORG/ba
+/stories/*/requirements/   @ORG/ba
+/stories/*/design/         @ORG/designer @ORG/dev
+/stories/*/test/           @ORG/tester
+/stories/*/decisions.md    @ORG/ba @ORG/tech-lead
+/skills/                   @ORG/tech-lead
+/scripts/                  @ORG/dev
+/.github/                  @ORG/dev

@@ -1,0 +1,22 @@
+name: docs-check
+on:
+  pull_request:
+  push:
+    branches: [main]
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Check docs
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            python scripts/check_docs.py --base "origin/${{ github.base_ref }}"
+          else
+            python scripts/check_docs.py
+          fi

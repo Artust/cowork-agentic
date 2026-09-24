@@ -1,0 +1,15 @@
+docs-check:
+  image: python:3.12
+  variables:
+    GIT_DEPTH: 0
+  script:
+    - |
+      if [ -n "$CI_MERGE_REQUEST_TARGET_BRANCH_NAME" ]; then
+        git fetch origin "$CI_MERGE_REQUEST_TARGET_BRANCH_NAME"
+        python scripts/check_docs.py --base "origin/$CI_MERGE_REQUEST_TARGET_BRANCH_NAME"
+      else
+        python scripts/check_docs.py
+      fi
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
